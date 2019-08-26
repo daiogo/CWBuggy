@@ -26,7 +26,8 @@ if not pi.connected:
     print("ERROR: please enabled pigpiod with 'sudo pigpiod'")
     exit()
 
-if len(sys.argv) == 1:
+# Display error message in case there are not enough or too many arguments
+if len(sys.argv) != 2:
     print("Please provide an argument with a pulse width value from {} to {}".format(MIN_PULSE_WIDTH, MAX_PULSE_WIDTH))
     
 else:
@@ -35,13 +36,16 @@ else:
     
     # Get direction and change sign if necessary
     if pulse_width < 0:
+        # Reverse
         pi.write(IN3, HIGH)
         pi.write(IN4, LOW)
         pulse_width *= -1
     else:
+        # Forward
         pi.write(IN3, LOW)
         pi.write(IN4, HIGH)
         
+    # If the pulse width value isn't within range
     if pulse_width < MIN_PULSE_WIDTH or pulse_width > MAX_PULSE_WIDTH:
         print("Please provide an argument with a pulse width value from {} to {}".format(MIN_PULSE_WIDTH, MAX_PULSE_WIDTH))
         
