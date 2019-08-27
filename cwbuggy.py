@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
 
 import remote
+import vehicle
 
-r = remote.Remote()
+print("Starting CWBuggy...")
 
-r.start()
+# Instantiate vehicle
+vehicle = vehicle.Vehicle()
+
+# Instantiate remote controller
+rc = remote.Remote(vehicle)
+rc.start()
+
+# Instantiate autopilot
+#auto = autopilot.Autopilot(vehicle)
+#auto.start()
+
+print("Finishing CWBuggy...")
+del vehicle
+print("Finished CWBuggy")

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
+import vehicle
 
 # Define constants
 PORT = 5541
@@ -8,15 +9,25 @@ RECEIVE_BUFFER_SIZE = 4
 
 class Remote:
     
-    # Properties
+    ####################################################################
+    # PROPERTIES                                                       #
+    ####################################################################
     _socket = None          # Socket object
     _connection = None      # Connection object
     _address = None         # Address string
     _command = b''          # Commands to the vehicle
-    _steering_angle = 0     # Vehicle steering angle in degrees
+    _steering_angle = 0     # Vehicle steering angle in º
     _throttle_position = 0  # Throttle position in %
     _horn = 0               # Horn status
+    _vehicle = None         # Vehicle object
+    _immobilized = True     # Immobilized flag
 
+    ####################################################################
+    # METHODS                                                          #
+    ####################################################################
+    def __init__(self, vehicle):
+        self._vehicle = vehicle
+    
     def create_socket(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
@@ -30,10 +41,16 @@ class Remote:
         print("Connected to: ", self._address)
 
     def close_connection(self):
+        # Immobilize vehicle before closing the connection
+        self._immobilized = True
+        self._vehicle.immobilize_vehicle()
+
+        # Close connection
         print("\nClosing connection...")
         self._connection.close()
         self._connection = None
         print("Connection closed")
+
 
     def close_socket(self):
         # Close socket if process is terminated and exit loop
@@ -42,32 +59,26 @@ class Remote:
         self._socket.close()
         print("Socket closed")
 
-    def receive_commands(self):
+    def receive_command(self):
         # Receive data from remote controller
         self._command = self._connection.recv(RECEIVE_BUFFER_SIZE)  # Blocking code
         
         # If client closed connection on his side, then also close on server side
         if self._command == b'':
-            self._steering_angle = 0
-            self._throttle_position = 0
+            self._steering_angle = 25
+            self._throttle_position = 100
             self._horn = 0
             self.close_connection()
-            #return 0, 0, 0
             
         else:
             # Extract commands from received data
             self._steering_angle = self._command[0]
             self._throttle_position = self._command[1]
             self._horn = self._command[2]
-            #return steering_angle, throttle_position, horn
-        
-    def control_vehicle(self):
-        print("Steering angle: {}".format(self._steering_angle))
-        print("Throttle position: {}".format(self._throttle_position))
-        print("Horn: {}".format(self._horn))
 
     def start(self):
         self.create_socket()
+        
         # As long the process isn't finished
         while 1:
             
@@ -75,6 +86,7 @@ class Remote:
             if self._connection == None:
                 try:
                     self.accept_connection()
+                    self._immobilized = False
                 
                 # If user presses Ctrl-C while accept() is executing, then close the socket
                 except KeyboardInterrupt:
@@ -83,9 +95,11 @@ class Remote:
                     
             # Receive commands and control vehicle
             try:
-                self.receive_commands()
-                self.control_vehicle()
+                self.receive_command()
+                if self._immobilized == False:
+                    self._vehicle.control_vehicle(self._steering_angle, self._throttle_position, self._horn)
             
             # If user presses Ctrl-C while recv() is executing, then close the connection
             except KeyboardInterrupt:
                 self.close_connection()
+                
