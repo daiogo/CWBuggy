@@ -20,7 +20,6 @@ class Remote:
     _throttle_position = 0  # Throttle position in %
     _horn = 0               # Horn status
     _vehicle = None         # Vehicle object
-    _immobilized = True     # Immobilized flag
 
     ####################################################################
     # METHODS                                                          #
@@ -42,7 +41,6 @@ class Remote:
 
     def close_connection(self):
         # Immobilize vehicle before closing the connection
-        self._immobilized = True
         self._vehicle.immobilize_vehicle()
 
         # Close connection
@@ -86,7 +84,7 @@ class Remote:
             if self._connection == None:
                 try:
                     self.accept_connection()
-                    self._immobilized = False
+                    self._vehicle.set_immobilized(False)
                 
                 # If user presses Ctrl-C while accept() is executing, then close the socket
                 except KeyboardInterrupt:
@@ -96,7 +94,7 @@ class Remote:
             # Receive commands and control vehicle
             try:
                 self.receive_command()
-                if self._immobilized == False:
+                if self._vehicle.get_immobilized() == False:
                     self._vehicle.control_vehicle(self._steering_angle, self._throttle_position, self._horn)
             
             # If user presses Ctrl-C while recv() is executing, then close the connection

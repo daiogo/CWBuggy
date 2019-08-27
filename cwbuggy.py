@@ -17,5 +17,7 @@ rc.start()
 #auto.start()
 
 print("Finishing CWBuggy...")
-del vehicle
+# Free resources
+del vehicle     
+del rc
 print("Finished CWBuggy")

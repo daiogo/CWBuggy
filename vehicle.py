@@ -13,6 +13,7 @@ class Vehicle:
     _engine = None          # Engine object
     _steering = None        # Steering object
     _horn = None			# Horn object
+    _immobilized = True     # Immobilized flag
 
     ####################################################################
     # METHODS                                                          #
@@ -36,5 +37,12 @@ class Vehicle:
         #print("Horn: {}".format(horn))
 
     def immobilize_vehicle(self):
+        self._immobilized = True
         self._steering.turn_off()
         self._engine.turn_off()
+
+    def set_immobilized(self, value):
+        self._immobilized = value
+
+    def get_immobilized(self):
+        return self._immobilized
