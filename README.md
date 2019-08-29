@@ -1,2 +1,2 @@
 # CWBuggy
-Autonomous RC Car
+RC Car
